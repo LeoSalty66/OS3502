@@ -3,7 +3,7 @@
 // ============================================
 #include "buffer.h"
 
-// Global variables for cleanup
+// g
 shared_buffer_t* buffer = NULL;
 sem_t* mutex = NULL;
 sem_t* empty = NULL;
@@ -37,14 +37,13 @@ int main(int argc, char* argv[]) {
     int consumer_id = atoi(argv[1]);
     int num_items = atoi(argv[2]);
     
-    // Set up signal handlers
+    // Set up the signal handlers
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
     
-    // Seed random number generator
     srand(time(NULL) + consumer_id * 100);
     
-    // Attach to shared memory 
+    // Attach to the shared memory 
     shm_id = shmget(SHM_KEY, sizeof(shared_buffer_t), 0666);
     if (shm_id == -1) {
         perror("shmget");
