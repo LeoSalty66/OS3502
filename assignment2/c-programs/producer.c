@@ -1,5 +1,11 @@
 // ============================================
 // producer.c - Producer process starter
+// Name:	    Leonardo Saltysiak
+// Class:	   CS 3302/Section W03
+// Term:		  Spring 2026
+// Instructor:    Prof. Regan
+// Assignment:    A2
+// IDE Name:	  VSCode
 // ============================================
 #include "buffer.h"
 #include <errno.h>

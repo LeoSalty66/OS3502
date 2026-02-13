@@ -1,5 +1,11 @@
 // ============================================s
 // buffer.h - Shared definitions
+// Name:	    Leonardo Saltysiak
+// Class:	   CS 3302/Section W03
+// Term:		  Spring 2026
+// Instructor:    Prof. Regan
+// Assignment:    A2
+// IDE Name:	  VSCode
 // ============================================
 #ifndef BUFFER_H
 #define BUFFER_H
