@@ -1,13 +1,13 @@
-# include < pthread .h >
-# include < stdio .h >
-# include < stdlib .h >
-# include < time .h >
-# include < unistd .h >
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
 // Configuration - experiment with different values !
-# define NUM_ACCOUNTS 2
-# define NUM_THREADS 4
-# define TRANSACTIONS_PER_THREAD 10
-# define INITIAL_BALANCE 1000.0
+#define NUM_ACCOUNTS 2
+#define NUM_THREADS 4
+#define TRANSACTIONS_PER_THREAD 10
+#define INITIAL_BALANCE 1000.0
 // Account data structure ( GIVEN )
 typedef struct {
     int account_id ;
@@ -77,55 +77,62 @@ void * teller_thread ( void * arg ) {
     }
     return NULL ;
 }
-// TODO 3: Implement main function
-// Reference : See pthread_create and pthread_join man pages
+
 int main () {
-    printf ( " === Phase 1: Race Conditions Demo ===\ n \ n " ) ;
+    printf ( "=== Phase 1: Race Conditions Demo ===\n\n" ) ;
+
     // TODO 3 a : Initialize all accounts
-    // Hint : Loop through accounts array
-    // Set : account_id = i , balance = INITIAL_BALANCE , transaction_count = 0
-    // YOUR CODE HERE
+    for ( int i = 0; i < NUM_ACCOUNTS ; i ++ ) {
+        accounts[i].account_id = i ;
+        accounts[i].balance = INITIAL_BALANCE ;
+        accounts[i].transaction_count = 0 ;
+    }
+
     // Display initial state ( GIVEN )
-    printf ( " Initial State :\ n " ) ;
-    for ( int i = 0; i < NUM_ACCOUNTS ; i ++) {
-        printf ( " Account % d : $ %.2 f \ n " , i , accounts [ i ]. balance ) ;
+    printf ( "Initial State:\n" ) ;
+    for ( int i = 0; i < NUM_ACCOUNTS ; i ++ ) {
+        printf ( "Account %d : $%.2f\n" , i , accounts[i].balance ) ;
     }
+
     // TODO 3 b : Calculate expected final balance
-    // Question : With random deposits / withdrawals , what should total be ?
-    // Hint : Total money in system should remain constant !
-    double expected_total = /* YOUR CODE HERE */ ;
-    printf ( " \ nExpected total : $ %.2 f \ n \ n " , expected_total ) ;
+    // Total money should remain constant
+    double expected_total = NUM_ACCOUNTS * INITIAL_BALANCE ;
+    printf ( "\nExpected total : $%.2f\n\n" , expected_total ) ;
+
     // TODO 3 c : Create thread and thread ID arrays
-    // Reference : man pthread_create for pthread_t type
-    pthread_t threads [ NUM_THREADS ];
-    int thread_ids [ NUM_THREADS ]; // GIVEN : Separate array for IDs
+    pthread_t threads[NUM_THREADS] ;
+    int thread_ids[NUM_THREADS] ;
+
     // TODO 3 d : Create all threads
-    // Reference : man pthread_create
-    // Caution : See Appendix A .2 warning about passing & i in loop !
-    for ( int i = 0; i < NUM_THREADS ; i ++) {
-        thread_ids [ i ] = i ; // GIVEN : Store ID persistently
-        // YOUR pthread_create CODE HERE
-        // Format : pthread_create (& threads [ i ] , NULL , teller_thread , & thread_ids [ i ]) ;
+    for ( int i = 0; i < NUM_THREADS ; i ++ ) {
+        thread_ids[i] = i ;
+        pthread_create ( &threads[i] , NULL , teller_thread , &thread_ids[i] ) ;
     }
+
     // TODO 3 e : Wait for all threads to complete
-    // Reference : man pthread_join
-    // Question : What happens if you skip this step ?
-    for ( int i = 0; i < NUM_THREADS ; i ++) {
-        // YOUR pthread_join CODE HERE
+    for ( int i = 0; i < NUM_THREADS ; i ++ ) {
+        pthread_join ( threads[i] , NULL ) ;
     }
+
     // TODO 3 f : Calculate and display results
-    printf ( " \ n === Final Results ===\ n " ) ;
-    double actual_total = 0.0;
-    for ( int i = 0; i < NUM_ACCOUNTS ; i ++) {
-        printf ( " Account % d : $ %.2 f (% d transactions ) \ n " ,
-        i , accounts [ i ]. balance , accounts [ i ]. transaction_count ) ;
-        actual_total += accounts [ i ]. balance ;
+    printf ( "\n=== Final Results ===\n" ) ;
+    double actual_total = 0.0 ;
+
+    for ( int i = 0; i < NUM_ACCOUNTS ; i ++ ) {
+        printf ( "Account %d : $%.2f (%d transactions)\n" ,
+            i , accounts[i].balance , accounts[i].transaction_count ) ;
+        actual_total += accounts[i].balance ;
     }
-    printf ( " \ nExpected total : $ %.2 f \ n " , expected_total ) ;
-    printf ( " Actual total : $ %.2 f \ n " , actual_total ) ;
-    printf ( " Difference : $ %.2 f \ n " , actual_total - expected_total ) ;
-    // TODO 3 g : Add race condition detection message
-    // If expected != actual , print " RACE CONDITION DETECTED !"
-    // Instruct user to run multiple times
+
+    printf ( "\nExpected total : $%.2f\n" , expected_total ) ;
+    printf ( "Actual total : $%.2f\n" , actual_total ) ;
+    printf ( "Difference : $%.2f\n" , actual_total - expected_total ) ;
+
+    // TODO 3 g : Race condition detection message
+    if ( actual_total != expected_total ) {
+        printf ( "\nRACE CONDITION DETECTED!\n" ) ;
+        printf ( "Run the program multiple times to observe non-deterministic behavior.\n" ) ;
+    }
+
     return 0;
 }
