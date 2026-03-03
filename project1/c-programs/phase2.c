@@ -16,11 +16,18 @@ typedef struct
     int account_id;
     double balance;
     int transaction_count;
-    pthread_mutex_t lock; // NEW : Mutex for this account
+    pthread_mutex_t lock; 
 } Account;
 
 Account accounts [ NUM_ACCOUNTS ];
+
+// Global variables and tracking mutex as per option 2 (tracking withdrawalas and deposits)
+double total_deposits = 0.0;
+double total_withdrawals = 0.0;
+pthread_mutex_t tracking_lock = PTHREAD_MUTEX_INITIALIZER;
+
 void cleanup_mutexes(); //fix implicit definition error
+
 // GIVEN : Example of mutex initialization
 void initialize_accounts()
 {
@@ -33,19 +40,26 @@ void initialize_accounts()
         pthread_mutex_init(&accounts[i].lock, NULL);
     }
 }
+
 // GIVEN : Example deposit function WITH proper protection
 void deposit_safe(int account_id, double amount)
 {
     // Acquire lock BEFORE accessing shared data
     pthread_mutex_lock(&accounts[account_id].lock);
+
     // ===== CRITICAL SECTION =====
-    // Only ONE thread can execute this at a time for this account
     accounts[account_id].balance += amount;
     accounts[account_id].transaction_count++;
     // ============================
-    // Release lock AFTER modifying shared data
+
     pthread_mutex_unlock(&accounts[account_id].lock);
+
+    //use tracking
+    pthread_mutex_lock(&tracking_lock);
+    total_deposits += amount;
+    pthread_mutex_unlock(&tracking_lock);
 }
+
 // TODO 1: Implement withdrawal_safe () with mutex protection
 // Reference : Follow the pattern of deposit_safe () above
 // Remember : lock BEFORE accessing data , unlock AFTER
@@ -53,14 +67,20 @@ void withdrawal_safe(int account_id, double amount)
 {
     // Acquire lock BEFORE accessing shared data
     pthread_mutex_lock(&accounts[account_id].lock);
+
     // ===== CRITICAL SECTION =====
-    // Only ONE thread can execute this at a time for this account
     accounts[account_id].balance -= amount;
     accounts[account_id].transaction_count++;
     // ============================
-    // Release lock AFTER modifying shared data
+
     pthread_mutex_unlock(&accounts[account_id].lock);
+
+    //use tracking
+    pthread_mutex_lock(&tracking_lock);
+    total_withdrawals += amount;
+    pthread_mutex_unlock(&tracking_lock);
 }
+
 // TODO 2: Update teller_thread to use safe functions
 // Change : deposit_unsafe -> deposit_safe
 // Change : withdrawal_unsafe -> withdrawal_safe
@@ -110,8 +130,8 @@ int main () {
         printf ( "Account %d : $%.2f\n" , i , accounts[i].balance ) ;
     }
 
-    double expected_total = NUM_ACCOUNTS * INITIAL_BALANCE ;
-    printf ( "\nExpected total : $%.2f\n\n" , expected_total ) ;
+    double initial_total = NUM_ACCOUNTS * INITIAL_BALANCE ;
+    printf ( "\nInitial total : $%.2f\n\n" , initial_total ) ;
 
     pthread_t threads[NUM_THREADS] ;
     int thread_ids[NUM_THREADS] ;
@@ -150,6 +170,9 @@ int main () {
         actual_total += accounts[i].balance ;
     }
 
+    // use totals to calculate difference
+    double expected_total = initial_total + total_deposits - total_withdrawals;
+
     printf ( "\nExpected total : $%.2f\n" , expected_total ) ;
     printf ( "Actual total : $%.2f\n" , actual_total ) ;
     printf ( "Difference : $%.2f\n" , actual_total - expected_total ) ;
@@ -172,7 +195,11 @@ void cleanup_mutexes()
     {
         pthread_mutex_destroy(&accounts[i].lock);
     }
+
+    //destroy tracking
+    pthread_mutex_destroy(&tracking_lock);
 }
+
 // TODO 5: Compare Phase 1 vs Phase 2 performance
 // Measure execution time for both versions
 // Document the overhead of synchronization
