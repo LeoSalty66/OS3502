@@ -70,3 +70,16 @@ def rename_path(old_path, new_path):
     new_path = Path(new_path)
 
     old_path.rename(new_path)
+
+def get_metadata(path):
+    """
+    Return metadata about a file or directory.
+    """
+    file_path = Path(path)
+    stats = file_path.stat()
+
+    return {
+        "size": stats.st_size,
+        "modified": stats.st_mtime,
+        "is_dir": file_path.is_dir(),
+    }

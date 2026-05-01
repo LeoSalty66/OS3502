@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 from pathlib import Path
+import time
 
 import file_ops
 
@@ -108,11 +109,15 @@ class FileManagerApp:
         else:
             try:
                 content = file_ops.read_file(selected_entry)
+                metadata = file_ops.get_metadata(selected_entry)
+                modified_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(metadata["modified"]))
 
                 self.current_file = selected_entry
                 self.text_editor.delete("1.0", tk.END)
                 self.text_editor.insert(tk.END, content)
-                self.status_label.config(text=f"Opened file: {selected_entry.name}")
+                self.status_label.config(
+                    text=f"Opened file: {selected_entry.name} | Size: {metadata['size']} bytes | Modified: {modified_time}"
+                )
 
             except UnicodeDecodeError:
                 messagebox.showerror(
